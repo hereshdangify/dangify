@@ -9,7 +9,9 @@ import 'package:my_test/backend/services/my_audio_handler.dart';
 class PlayListController extends GetxController {
   List<MediaItem> offerMediaItems = [];
   AudioPlayer audioPlayer = AudioPlayer();
-  final List<PlayList> playList = [];
+  // final List<PlayList> playList = [];
+  // List<PlayList>? playList;
+
   final List<AudioService> audioService = [];
   final player = AudioService();
   MyAudioHandler myAudioHandler = MyAudioHandler();
@@ -18,7 +20,19 @@ class PlayListController extends GetxController {
   Duration? totalDuration;
   Duration? currentPosition;
 
+  final playList = <PlayList>[];
+  RxInt selectedIndex = 0.obs;
+
+  bool isLoading = false;
+
+  void changeTrack(int index) {
+    if (selectedIndex >= playList.length + 1) {
+      selectedIndex.value = index;
+    }
+  }
+
   getplayLists() async {
+    isLoading = true;
     var resPlayList = await dio.post(Endpoint.getTracks);
     playList.clear();
     for (var item in resPlayList.data['data']) {
@@ -33,10 +47,10 @@ class PlayListController extends GetxController {
           trackId: item['track_id'] ?? 0,
         ),
       );
+      isLoading = false;
+
+      update();
     }
-    // log("kkkkkkkkk ${playList.length.toString()}");
-    castTrackModeltoMediaItem();
-    update();
   }
 
   castTrackModeltoMediaItem() {
@@ -57,26 +71,25 @@ class PlayListController extends GetxController {
 
   togglePlayPause() {
     // !audioPlayer.playing ? audioPlayer.play() : audioPlayer.pause();
-    myAudioHandler.play();
-    myAudioHandler.pause();
+    // myAudioHandler.playPlaylist(getplayLists());
     update();
   }
 
-  Future<void> initAudio() async {
-    totalDuration = await audioPlayer
-        .setUrl(Endpoint.base + playList[0].trackUrl.toString());
-    audioPlayer.positionStream.listen((event) {
-      currentPosition = event;
-      update();
-    });
-  }
+  // Future<void> initAudio() async {
+  //   totalDuration = await audioPlayer
+  //       .setUrl(Endpoint.base + playList[0].trackUrl!.toString());
+  //   audioPlayer.positionStream.listen((event) {
+  //     currentPosition = event;
+  //     update();
+  //   });
+  // }
 
-  String formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60).abs());
-    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60).abs());
-    return '$twoDigitMinutes:$twoDigitSeconds';
-  }
+  // String formatDuration(Duration duration) {
+  //   String twoDigits(int n) => n.toString().padLeft(2, '0');
+  //   String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60).abs());
+  //   String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60).abs());
+  //   return '$twoDigitMinutes:$twoDigitSeconds';
+  // }
 
   // togglePlayPause() {
   //   if (isPlaying.value) {
@@ -90,8 +103,8 @@ class PlayListController extends GetxController {
   @override
   void onInit() {
     getplayLists();
-    togglePlayPause();
-    initAudio();
+    // togglePlayPause();
+    // initAudio();
 
     super.onInit();
   }

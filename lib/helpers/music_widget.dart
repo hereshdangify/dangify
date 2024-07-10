@@ -41,10 +41,11 @@ class MusicWidget extends StatelessWidget {
                   children: [
                     //Total time-------------------------------------------------------------
                     Text(
-                      controller.totalDuration == null
-                          ? '00:00'
-                          : controller
-                              .formatDuration(controller.totalDuration!),
+                      // controller.totalDuration == null
+                      // ?
+                      '00:00',
+                      // : controller
+                      //     .formatDuration(controller.totalDuration!),
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
@@ -54,10 +55,11 @@ class MusicWidget extends StatelessWidget {
 
                     //Current time-----------------------------------------------------------
                     Text(
-                      controller.currentPosition == null
-                          ? '00:00'
-                          : controller
-                              .formatDuration(controller.currentPosition!),
+                      // controller.currentPosition == null
+                      // ?
+                      '00:00',
+                      // : controller
+                      //     .formatDuration(controller.currentPosition!),
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
@@ -76,7 +78,16 @@ class MusicWidget extends StatelessWidget {
                       children: [
                         //backward-------------------------------------------------
                         IconButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            if (controller.selectedIndex.value > 0) {
+                              controller.selectedIndex.value--;
+                            } else {
+                              controller.selectedIndex.value =
+                                  controller.playList.length - 1;
+                            }
+
+                            controller.update();
+                          },
                           icon: Icon(CupertinoIcons.backward_end_fill,
                               color: Colors.white, size: 50),
                         ),
@@ -84,8 +95,9 @@ class MusicWidget extends StatelessWidget {
 
                         //play and pause-----------------------------------------------------
                         IconButton(
-                          onPressed: controller
-                              .myAudioHandler.listenForCurrentSongIndexChange,
+                          onPressed: () {
+                            // myAudioHandler.playPlaylist();
+                          },
                           icon: Icon(
                             // controller.audioPlayer.playing == false
                             //     ? CupertinoIcons.play_circle_fill
@@ -99,15 +111,27 @@ class MusicWidget extends StatelessWidget {
 
                         //forward-------------------------------------------------
                         IconButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            if (controller.selectedIndex.value <
+                                controller.playList.length - 1) {
+                              controller.selectedIndex.value++;
+                            } else {
+                              controller.selectedIndex.value = 0;
+                            }
+
+                            controller.update();
+                          },
                           icon: Icon(CupertinoIcons.forward_end_fill,
-                              color: Colors.white, size: 50),
+                              color: Colors.white, size: 40),
                         ),
                       ],
                     ),
                     Spacer(),
-                    Icon(CupertinoIcons.download_circle,
-                        color: Colors.white, size: 40),
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(CupertinoIcons.download_circle,
+                          color: Colors.white, size: 40),
+                    ),
                   ],
                 ),
               ),

@@ -1,100 +1,64 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:my_test/backend/model/play_list_model.dart';
 
-class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
-  AudioPlayer audioPlayer = AudioPlayer();
+class MyAudioHandler extends BaseAudioHandler with SeekHandler {
+  final _player = AudioPlayer();
 
-// فانکشن ساخت آدیو سرویس از مدیا آیتم----------------------------------------------------
-  UriAudioSource createAudioSource(MediaItem item) {
-    return ProgressiveAudioSource(Uri.parse(item.id));
+  MyAudioHandler() {
+    _notifyAudioHandlerAboutPlaybackEvents();
   }
 
-// به تغییرات فهرست آهنگ فعلی گوش بده و مدیا آیتم رو بروز کن---------------------------------
-  void listenForCurrentSongIndexChange() {
-    audioPlayer.currentIndexStream.listen((index) {
-      final playList = queue.value;
-      if (index == null || playList.isEmpty) return;
-      mediaItem.add(playList[index]);
-    });
-  }
-
-  // وضعیت پخش فعلی رو بر اساس رویداد پخش دریافتی پخش کن---------------------------------
-  void broadcastState(PlaybackEvent event) {
-    playbackState.add(
-      playbackState.value.copyWith(
+  void _notifyAudioHandlerAboutPlaybackEvents() {
+    _player.playbackEventStream.listen((event) {
+      final playing = _player.playing;
+      playbackState.add(playbackState.value.copyWith(
         controls: [
           MediaControl.skipToPrevious,
-          if (audioPlayer.playing) MediaControl.pause else MediaControl.play,
+          playing ? MediaControl.pause : MediaControl.play,
+          MediaControl.stop,
           MediaControl.skipToNext,
         ],
-        systemActions: {
+        systemActions: const {
           MediaAction.seek,
-          MediaAction.seekForward,
-          MediaAction.seekBackward,
         },
-        processingState: const {
-          ProcessingState.idle: AudioProcessingState.idle,
-          ProcessingState.loading: AudioProcessingState.loading,
-          ProcessingState.buffering: AudioProcessingState.buffering,
-          ProcessingState.ready: AudioProcessingState.ready,
-          ProcessingState.completed: AudioProcessingState.completed,
-        }[audioPlayer.processingState]!,
-        playing: audioPlayer.playing,
-        updatePosition: audioPlayer.position,
-        bufferedPosition: audioPlayer.bufferedPosition,
-        speed: audioPlayer.speed,
-        queueIndex: audioPlayer.currentIndex,
-      ),
-    );
-  }
-
-  // فانکشن مقداردهی اولیه آهنگ ها و راه اندازی پخش صوتی-------------------------------------
-  Future<void> initSongs({required List<MediaItem> songs}) async {
-    // به رویداد پخش گوش کن و وضعیت رو پخش کن------------------------------------------------
-    audioPlayer.playbackEventStream.listen(broadcastState);
-
-    //فهرستی از لیست آهنگ های ایجاد شده آدیو سورس------------------------
-    final audioSource = songs.map(createAudioSource).toList();
-
-    // آدیو سورس رو پیوسته از آدیو پلیر از آدیو سورس تنظیم میکنه---------------------------
-    await audioPlayer
-        .setAudioSource(ConcatenatingAudioSource(children: audioSource));
-
-    // فهرست آهنگ ها رو از آدیو سورس بگیر و در صف پخش قرار بده---------------------------
-    queue.value.clear();
-    queue.value.addAll(songs);
-    queue.add(queue.value);
-
-    // به تغییرات توی فهرست آهنگ فعلی گوش بده-------------------------
-    listenForCurrentSongIndexChange();
-
-    // بعد تموم شدن آهنگ برو بعدی
-    audioPlayer.processingStateStream.listen((state) {
-      if (state == ProcessingState.completed) skipToNext();
+        androidCompactActionIndices: const [0, 1, 3],
+        playing: playing,
+        updatePosition: _player.position,
+        bufferedPosition: _player.bufferedPosition,
+        speed: _player.speed,
+      ));
     });
   }
 
-  @override
-  Future<void> play() => audioPlayer.play();
-
-  @override
-  Future<void> pause() async => audioPlayer.pause();
-
-  @override
-  Future<void> seek(Duration position) => audioPlayer.seek(position);
-
-//یه مورد خاص از صف رو پخش کن
-  @override
-  Future<void> skipToQueueItem(int index) async {
-    await audioPlayer.seek(Duration.zero, index: index);
-    play();
+  Future<void> playPlaylist(PlayList playlist) async {
+    if (playlist.trackUrl != null) {
+      await _player.setUrl(playlist.trackUrl!);
+      _updateMediaItem(playlist);
+      _player.play();
+    }
   }
 
-  //تو صف به آهنگ بعدی برو----------------------------------------------
-  @override
-  Future<void> skipToNext() => audioPlayer.seekToNext();
+  void _updateMediaItem(PlayList playlist) {
+    mediaItem.add(MediaItem(
+      id: playlist.trackId.toString(),
+      album: playlist.albumName ?? '',
+      title: playlist.trackName ?? '',
+      artist: playlist.artistName ?? '',
+      artUri: Uri.parse(playlist.pictureUrl ?? ''),
+      duration: _player.duration,
+    ));
+  }
 
-  //تو صف به آهنگ قبلی برو----------------------------------------------
   @override
-  Future<void> skipToPrevious() => audioPlayer.seekToPrevious();
+  Future<void> play() => _player.play();
+
+  @override
+  Future<void> pause() => _player.pause();
+
+  @override
+  Future<void> seek(Duration position) => _player.seek(position);
+
+  @override
+  Future<void> stop() => _player.stop();
 }
