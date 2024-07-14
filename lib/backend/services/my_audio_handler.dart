@@ -6,10 +6,10 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
   final _player = AudioPlayer();
 
   MyAudioHandler() {
-    _notifyAudioHandlerAboutPlaybackEvents();
+    notifyAudioHandlerAboutPlaybackEvents();
   }
 
-  void _notifyAudioHandlerAboutPlaybackEvents() {
+  void notifyAudioHandlerAboutPlaybackEvents() {
     _player.playbackEventStream.listen((event) {
       final playing = _player.playing;
       playbackState.add(playbackState.value.copyWith(
@@ -31,8 +31,9 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     });
   }
 
-  Future<void> playPlaylist(PlayList playlist) async {
-    if (playlist.trackUrl != null) {
+  playPlaylist() async {
+    PlayList? playlist;
+    if (playlist!.trackUrl != null) {
       await _player.setUrl(playlist.trackUrl!);
       _updateMediaItem(playlist);
       _player.play();
@@ -40,14 +41,16 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   void _updateMediaItem(PlayList playlist) {
-    mediaItem.add(MediaItem(
-      id: playlist.trackId.toString(),
-      album: playlist.albumName ?? '',
-      title: playlist.trackName ?? '',
-      artist: playlist.artistName ?? '',
-      artUri: Uri.parse(playlist.pictureUrl ?? ''),
-      duration: _player.duration,
-    ));
+    mediaItem.add(
+      MediaItem(
+        id: playlist.trackId.toString(),
+        album: playlist.albumName ?? '',
+        title: playlist.trackName ?? '',
+        artist: playlist.artistName ?? '',
+        artUri: Uri.parse(playlist.pictureUrl ?? ''),
+        duration: _player.duration,
+      ),
+    );
   }
 
   @override

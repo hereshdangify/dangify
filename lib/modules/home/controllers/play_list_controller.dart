@@ -8,7 +8,7 @@ import 'package:my_test/backend/services/my_audio_handler.dart';
 
 class PlayListController extends GetxController {
   List<MediaItem> offerMediaItems = [];
-  AudioPlayer audioPlayer = AudioPlayer();
+  final audioPlayer = AudioPlayer();
   // final List<PlayList> playList = [];
   // List<PlayList>? playList;
 
@@ -22,13 +22,21 @@ class PlayListController extends GetxController {
 
   final playList = <PlayList>[];
   RxInt selectedIndex = 0.obs;
+  RxBool isPlaying = false.obs;
 
   bool isLoading = false;
 
-  void changeTrack(int index) {
-    if (selectedIndex >= playList.length + 1) {
-      selectedIndex.value = index;
-    }
+  // void changeTrack(int index) {
+  //   if (selectedIndex >= playList.length + 1) {
+  //     selectedIndex.value = index;
+  //   }
+  // }
+
+  playAndPause() async {
+    audioPlayer.setUrl(Endpoint.base + playList[selectedIndex.value].trackUrl!);
+    !audioPlayer.playing ? audioPlayer.play() : audioPlayer.pause();
+
+    update();
   }
 
   getplayLists() async {
@@ -47,8 +55,8 @@ class PlayListController extends GetxController {
           trackId: item['track_id'] ?? 0,
         ),
       );
-      isLoading = false;
 
+      isLoading = false;
       update();
     }
   }
@@ -69,9 +77,36 @@ class PlayListController extends GetxController {
     }
   }
 
-  togglePlayPause() {
-    // !audioPlayer.playing ? audioPlayer.play() : audioPlayer.pause();
-    // myAudioHandler.playPlaylist(getplayLists());
+  void forward() {
+    selectedIndex.value = (selectedIndex.value + 1) % playList.length;
+    audioPlayer.setUrl(Endpoint.base + playList[selectedIndex.value].trackUrl!);
+    update();
+
+    // if (controller.selectedIndex.value <
+    //                             controller.playList.length - 1) {
+    //                           controller.selectedIndex.value++;
+    //                         } else {
+    //                           controller.selectedIndex.value = 0;
+    //                         }
+  }
+
+  void backward() {
+    selectedIndex.value =
+        (selectedIndex.value - 1 + playList.length) % playList.length;
+    audioPlayer.setUrl(Endpoint.base + playList[selectedIndex.value].trackUrl!);
+    update();
+
+    // if (controller.selectedIndex.value > 0) {
+    //                       controller.selectedIndex.value--;
+    //                     } else {
+    //                       controller.selectedIndex.value =
+    //                           controller.playList.length - 1;
+    //                     }
+  }
+
+  void selectedPlayList(int index) {
+    selectedIndex.value = index;
+    audioPlayer.setUrl(Endpoint.base + playList[selectedIndex.value].trackUrl!);
     update();
   }
 
@@ -103,9 +138,6 @@ class PlayListController extends GetxController {
   @override
   void onInit() {
     getplayLists();
-    // togglePlayPause();
-    // initAudio();
-
     super.onInit();
   }
 }

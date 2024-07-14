@@ -78,16 +78,7 @@ class MusicWidget extends StatelessWidget {
                       children: [
                         //backward-------------------------------------------------
                         IconButton(
-                          onPressed: () {
-                            if (controller.selectedIndex.value > 0) {
-                              controller.selectedIndex.value--;
-                            } else {
-                              controller.selectedIndex.value =
-                                  controller.playList.length - 1;
-                            }
-
-                            controller.update();
-                          },
+                          onPressed: controller.backward,
                           icon: Icon(CupertinoIcons.backward_end_fill,
                               color: Colors.white, size: 50),
                         ),
@@ -96,13 +87,13 @@ class MusicWidget extends StatelessWidget {
                         //play and pause-----------------------------------------------------
                         IconButton(
                           onPressed: () {
-                            // myAudioHandler.playPlaylist();
+                            // print('ffff ${controller.selectedIndex.value}');
+                            controller.playAndPause();
                           },
                           icon: Icon(
-                            // controller.audioPlayer.playing == false
-                            //     ? CupertinoIcons.play_circle_fill
-                            //     :
-                            CupertinoIcons.play_circle_fill,
+                            controller.audioPlayer.playing
+                                ? CupertinoIcons.pause_circle_fill
+                                : CupertinoIcons.play_circle_fill,
                             color: Colors.white,
                             size: 60,
                           ),
@@ -111,16 +102,7 @@ class MusicWidget extends StatelessWidget {
 
                         //forward-------------------------------------------------
                         IconButton(
-                          onPressed: () {
-                            if (controller.selectedIndex.value <
-                                controller.playList.length - 1) {
-                              controller.selectedIndex.value++;
-                            } else {
-                              controller.selectedIndex.value = 0;
-                            }
-
-                            controller.update();
-                          },
+                          onPressed: controller.forward,
                           icon: Icon(CupertinoIcons.forward_end_fill,
                               color: Colors.white, size: 40),
                         ),
